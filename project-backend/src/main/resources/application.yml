@@ -4,3 +4,30 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/boot_vue?serverTimezone = GMT
+  mail:
+    host: smtp.office365.com
+    username: zq13602874@outlook.com
+    password: ajcsofjuacpfszwm
+#    username: 330171517@qq.com
+#    password: bdrlhyjtetmobgjc
+    port: 587
+    default-encoding: UTF-8
+    properties:
+      from: zq13602874@outlook.com
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.office365.com
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+  redis:
+    host: localhost
+    port: 6379
+logging:
+  level:
+    org:
+      springframework:
+        security=DEBUG:

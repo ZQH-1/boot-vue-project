@@ -19,4 +19,8 @@
       <module name="project-backend" options="-parameters" />
     </option>
   </component>
+  <component name="TypeScriptCompiler">
+    <option name="typeScriptServiceDirectory" value="$PROJECT_DIR$/project-frontend/node_modules/@element-plus" />
+    <option name="versionType" value="SERVICE_DIRECTORY" />
+  </component>
 </project>
