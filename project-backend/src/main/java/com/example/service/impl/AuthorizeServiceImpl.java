@@ -14,6 +14,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -32,6 +33,8 @@ public class AuthorizeServiceImpl implements AuthorizeService {
     @Resource
     StringRedisTemplate template;
 
+    BCryptPasswordEncoder encoder=new BCryptPasswordEncoder();
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if(username == null){
@@ -48,13 +51,16 @@ public class AuthorizeServiceImpl implements AuthorizeService {
     }
 
     @Override
-    public boolean sendValidateEmail(String email,String sessionId)  {
+    public String sendValidateEmail(String email,String sessionId)  {
         String key="mail:"+sessionId+":"+email;
         if(Boolean.TRUE.equals(template.hasKey(key))){
             Long expire = Optional.ofNullable(template.getExpire(key)).orElse(0L);
             if(expire>120){
-                return false;
+                return "请求频繁，请稍后再试";
             }
+        }
+        if(accountMapper.sendEmailValid(email)!=null){
+            return "该邮箱已被注册";
         }
 
         System.out.println(email);
@@ -70,11 +76,36 @@ public class AuthorizeServiceImpl implements AuthorizeService {
             mailSender.send(mail);
             System.out.println("发送成功");
             template.opsForValue().set(key,String.valueOf(code),3,TimeUnit.MINUTES);
-            return true;
+            return null;
         }catch (Exception e){
             e.printStackTrace();
-            return false;
+            return "发送失败,检查地址是否正确。";
         }
 
+    }
+
+    @Override
+    public String validateAndRegister(String username, String password, String email, String code,String sessionId) {
+        String key="mail:"+sessionId+":"+email;
+        System.out.println(key);
+        if(Boolean.TRUE.equals(template.hasKey(key))){
+            String s=template.opsForValue().get(key);
+            if(s==null){
+                return "验证码已失效。";
+            }
+            if(s.equals(code)){
+                password=encoder.encode(password);
+               if(accountMapper.createAccount(username,password,email)>0){
+                   template.delete(key);
+                   return null;
+               }else{
+                   return "内部错误";
+               }
+            }else{
+                return "验证码错误";
+            }
+        }else{
+            return "无验证码，请先申请。";
+        }
     }
 }

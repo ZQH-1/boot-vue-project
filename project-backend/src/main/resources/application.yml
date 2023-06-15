@@ -31,3 +31,9 @@ logging:
     org:
       springframework:
         security=DEBUG:
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: none
+        secure: true

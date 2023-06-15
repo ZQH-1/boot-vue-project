@@ -37,14 +37,18 @@ public class SecurityConfig{
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .authorizeHttpRequests()
-                .antMatchers("api/auth/*").permitAll()
-                .anyRequest().authenticated()
-                .and()
+//                .authorizeHttpRequests()
+//                .antMatchers("/api/auth/*").permitAll()
+//                .anyRequest().authenticated()
+//                .and()
                 .formLogin()
                 .loginProcessingUrl("/api/auth/login")
                 .successHandler(this::onAuthenticationSuccess)
                 .failureHandler(this::onAuthenticationFailure)
+                .and()
+                .authorizeHttpRequests()
+                .antMatchers("/api/auth/*").permitAll()
+                .anyRequest().authenticated()
                 .and()
                 .rememberMe()
                 .tokenRepository(persistentTokenRepository())
@@ -78,6 +82,7 @@ public class SecurityConfig{
         cors.setAllowCredentials(true);
         cors.addAllowedHeader("*");
         cors.addAllowedMethod("*");
+        cors.addAllowedOrigin("http://127.0.0.1:5173/");
         cors.addAllowedOriginPattern("*");
         cors.addExposedHeader("*");
         UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource();

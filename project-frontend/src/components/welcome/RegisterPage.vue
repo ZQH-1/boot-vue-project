@@ -8,28 +8,28 @@
     <div style="margin-top: 50px">
       <el-form :model="form" :rules="rules" @validate="mailValid" ref="formRef">
         <el-form-item prop="username">
-          <el-input v-model="form.username" type="text" placeholder="用户名">
+          <el-input v-model="form.username" minlength="3" maxlength="8" type="text" placeholder="用户名">
             <template #prefix>
               <el-icon><User /></el-icon>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="form.password" type="password" placeholder="密码" >
+          <el-input v-model="form.password" type="password" minlength="6" maxlength="16" placeholder="密码" >
             <template #prefix>
               <el-icon><Lock /></el-icon>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item prop="password_repeat">
-          <el-input v-model="form.password_repeat" type="password" placeholder="重复密码" >
+          <el-input v-model="form.password_repeat" type="password" minlength="6" maxlength="16" placeholder="重复密码" >
             <template #prefix>
               <el-icon><Lock /></el-icon>
             </template>
           </el-input>
         </el-form-item>
         <el-form-item prop="email">
-          <el-input v-model="form.email" type="email" placeholder="邮箱地址" >
+          <el-input v-model="form.email" type="email" placeholder="邮箱地址"  >
             <template #prefix>
               <el-icon><Message /></el-icon>
             </template>
@@ -38,14 +38,16 @@
         <el-form-item prop="code">
           <el-row :gutter="10" style="width: 100%">
             <el-col :span="17">
-              <el-input v-model="form.code" type="text" placeholder="请输入验证码" >
+              <el-input v-model="form.code" type="text" minlength="6" maxlength="6" placeholder="请输入验证码" >
                 <template #prefix>
                   <el-icon><EditPen /></el-icon>
                 </template>
               </el-input>
             </el-col>
             <el-col :span="5">
-              <el-button type="success" @click="validEmail" :disabled="!isEmailValid">获取验证码</el-button>
+              <el-button type="success" @click="validEmail" :disabled="!isEmailValid || cold>0">
+                {{cold>0?"等待"+cold+"秒":"发送验证码"}}
+              </el-button>
             </el-col>
           </el-row>
         </el-form-item>
@@ -104,7 +106,7 @@ const validatePassword=(rule,value,callback)=>{
 const rules= {
   username:[
     { validator:validateUsername,trigger:['blur','change']},
-    {min:3,max:12,message:'大小在3到12个字符之间 ',trigger: 'blur'}
+    {min:3,max:8,message:'大小在3到8个字符之间 ',trigger: 'blur'}
   ],
   password:[
     {required:true,message:'密码不能为空，请输入密码',trigger:'blur'},
@@ -124,6 +126,8 @@ const rules= {
 }
 const isEmailValid=ref(false)
 const formRef = ref()
+const cold=ref(0)
+
 const mailValid=(prop,isValid)=>{
   if(prop ==='email'){
     isEmailValid.value=isValid
@@ -134,7 +138,13 @@ const mailValid=(prop,isValid)=>{
 const register=()=>{
   formRef.value.validate((isValid)=>{
     if(isValid){
-
+      post("/api/auth/register",{
+        username: form.username,
+        password: form.password,
+        email: form.email,
+        code: form.code,
+        withCredentials: true
+      },(message)=>{ElMessage.success(message),router.push("/")},(message)=>{ElMessage.warning(message)})
     }else{
       ElMessage.warning('请完善未填写选项!');
     }
@@ -143,7 +153,11 @@ const register=()=>{
 const validEmail=()=>{
   post("/api/auth/valid-email",{
     email:form.email
-  },(message)=>{ElMessage.success(message)}
+  },(message)=>{
+      ElMessage.success(message)
+      cold.value=60
+      setInterval(()=>cold.value--,1000)
+    }
   )
 }
 </script>
